@@ -1,50 +1,64 @@
 # Practical Fault Attacks on Neural Network Implementations
 
-This repository contains experiments for a bachelor thesis focused on practical clock-glitch fault attacks against neural network implementations on an embedded STM32 target using ChipWhisperer.
+This repository contains experiments for my bachelor thesis. The focus is on practical clock glitch attacks on a neural network running on an STM32 microcontroller using ChipWhisperer.
 
-## Project Overview
+## What this project is about
 
-The main goal is to study how hardware clock glitches can affect neural network inference, especially the ReLU activation function. The experiments compare several activation functions and then analyze one ReLU-specific fault case in detail using internal network snapshots.
+The goal was to check how hardware faults (clock glitches) can affect neural network inference.
 
-## Repository Structure
+I tested several activation functions (ReLU, sigmoid, tanh), but the main focus is on ReLU, where I was able to observe and explain a specific fault using internal network values.
 
-```text
+## Structure
+
+
 experiment/
-  ReluExperiment.ipynb              # Detailed ReLU fault experiment
-  allActivationsExperiment.ipynb    # Comparison across activation functions
+ReluExperiment.ipynb # main experiment focused on ReLU
+allActivationsExperiment.ipynb # comparison between different activations
 
 firmware/
-  nn-mnist.c                        # SimpleSerial firmware interface
-  nn.c / nn.h                       # Neural network implementation
-  model_data_*.c                    # Weights for different activation functions
-  Makefile                          # Build configuration for ChipWhisperer firmware
+nn-mnist.c # SimpleSerial interface for ChipWhisperer
+nn.c / nn.h # neural network implementation
+model_data_*.c # weights for each activation
+Makefile # build configuration
 
 results/
-  reluResults/                      # ReLU experiment outputs
-  allActivationsResults/            # Cross-activation comparison outputs
-Main ReLU Result
+reluResults/ # results for ReLU experiment
+allActivationsResults/ # comparison results
 
-The final ReLU experiment demonstrates a snapshot-backed ReLU fault. In the no-glitch control, the ReLU output follows:
+
+## Main result (ReLU)
+
+In normal execution (no glitch), ReLU behaves as expected:
+
 
 a1 = max(z1, 0)
 
-Under the targeted clock glitch, one neuron inside the selected ReLU trigger window violates this rule:
+
+But under a specific clock glitch, I observed a violation of this rule for one neuron:
+
 
 z1[16] = -3.916523
 expected a1[16] = 0
-glitched a1[16] = -3.916523
+actual a1[16] = -3.916523
 
-This changes the network logits and flips the prediction from class 9 to class 4.
 
-Important Notes
-Final ReLU attack uses FAULT_NONE.
-Software fault models are included only for debugging and comparison.
-The ReLU operation is temporally extended with EXP_RELU_REPEAT=32 to make the hardware fault window observable.
-The firmware is intended to be built inside the ChipWhisperer firmware environment.
-Example Build Command
+So the negative value was not zeroed. This error then propagated through the network and changed the final prediction.
+
+## Important notes
+
+- Final ReLU experiment uses `FAULT_NONE` (no software fault)
+- All effects are caused by hardware clock glitching
+- ReLU execution was slightly extended (`EXP_RELU_REPEAT=32`) to make timing easier to target
+- Firmware is intended to be used inside the ChipWhisperer environment
+
+## Build example
+
+
 make PLATFORM=CWLITEARM CRYPTO_TARGET=NONE SS_VER=SS_VER_2_1 ACTIVATION=relu EXPERIMENT=1 EXP_RELU_REPEAT=32
-Hardware Setup
-ChipWhisperer-Lite
-STM32F3 target
-SimpleSerial2 protocol
-Clock glitching through ChipWhisperer
+
+
+## Hardware
+
+- ChipWhisperer-Lite
+- STM32F3 target
+- SimpleSerial2 communication
