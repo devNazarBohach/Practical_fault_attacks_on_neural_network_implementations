@@ -1,0 +1,13 @@
+neuron,in_trigger_window,z1_clean,z1_test,z1_delta,expected_a1_test,a1_clean,a1_test,a1_delta,test_relu_error,abs_test_relu_error,violation,neg_not_zeroed,pos_unexpectedly_zeroed,finite_wrong_value
+16,True,-3.9165235,-3.9165235,0.0,0.0,0.0,-3.9165235,-3.9165235,-3.9165235,3.9165235,True,True,False,False
+0,False,1.1859821,1.1859821,0.0,1.1859821,1.1859821,1.1859821,0.0,0.0,0.0,False,False,False,False
+1,False,0.89846563,0.89846563,0.0,0.89846563,0.89846563,0.89846563,0.0,0.0,0.0,False,False,False,False
+2,False,3.3476038,3.3476038,0.0,3.3476038,3.3476038,3.3476038,0.0,0.0,0.0,False,False,False,False
+3,False,4.645538,4.645538,0.0,4.645538,4.645538,4.645538,0.0,0.0,0.0,False,False,False,False
+4,False,2.4458745,2.4458745,0.0,2.4458745,2.4458745,2.4458745,0.0,0.0,0.0,False,False,False,False
+5,False,0.7053696,0.7053696,0.0,0.7053696,0.7053696,0.7053696,0.0,0.0,0.0,False,False,False,False
+6,False,3.9132445,3.9132445,0.0,3.9132445,3.9132445,3.9132445,0.0,0.0,0.0,False,False,False,False
+7,False,1.003572,1.003572,0.0,1.003572,1.003572,1.003572,0.0,0.0,0.0,False,False,False,False
+8,False,1.0406003,1.0406003,0.0,1.0406003,1.0406003,1.0406003,0.0,0.0,0.0,False,False,False,False
+9,False,3.472173,3.472173,0.0,3.472173,3.472173,3.472173,0.0,0.0,0.0,False,False,False,False
+10,False,-1.3899307,-1.3899307,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False,False,False

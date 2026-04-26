@@ -1,0 +1,2 @@
+attempt,timed_out,packet_valid,packet_finite,packet_consistent,packet_plausible_logits,pred,changed_pred,reason,effect_score,snapshot_ok,snapshot_error,relu_summary_valid,relu_summary_n_violations,relu_summary_n_violations_in_window
+1,False,True,True,True,True,4,True,ok,1011.3678904771805,True,,True,1,1
