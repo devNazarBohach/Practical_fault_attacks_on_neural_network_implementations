@@ -10,20 +10,19 @@ I tested several activation functions (ReLU, sigmoid, tanh), but the main focus 
 
 ## Structure
 
-
 experiment/
-ReluExperiment.ipynb # main experiment focused on ReLU
-allActivationsExperiment.ipynb # comparison between different activations
+ReluExperiment.ipynb # main ReLU experiment
+allActivationsExperiment.ipynb # activation comparison
 
 firmware/
-nn-mnist.c # SimpleSerial interface for ChipWhisperer
-nn.c / nn.h # neural network implementation
-model_data_*.c # weights for each activation
-Makefile # build configuration
+nn-mnist.c # SimpleSerial interface
+nn.c / nn.h # neural network
+model_data_*.c # weights
+Makefile # build config
 
 results/
-reluResults/ # results for ReLU experiment
-allActivationsResults/ # comparison results
+reluResults/ # ReLU outputs
+allActivationsResults/ # comparison outputs
 
 
 ## Main result (ReLU)
@@ -38,7 +37,9 @@ But under a specific clock glitch, I observed a violation of this rule for one n
 
 
 z1[16] = -3.916523
+
 expected a1[16] = 0
+
 actual a1[16] = -3.916523
 
 
