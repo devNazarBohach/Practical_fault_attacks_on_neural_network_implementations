@@ -1,8 +1,7 @@
 # Practical Fault Attacks on Neural Network Implementations
 
 Bachelor thesis project — clock glitch attacks on a neural network running on STM32F3
-via ChipWhisperer-Lite. The main question: do different activation functions (ReLU, Sigmoid,
-Tanh, Extended ReLU) differ in how vulnerable they are to hardware fault injection?
+via ChipWhisperer-Lite. 
 
 ---
 
@@ -40,7 +39,7 @@ results/
 
 | Tool | Version used | Notes |
 |---|---|---|
-| Python | 3.10+ | |
+| Python | 3.10 | |
 | TensorFlow / Keras | 2.x | for training only |
 | NumPy | any recent | |
 | ChipWhisperer | 5.7.x | `pip install chipwhisperer` |
@@ -50,7 +49,38 @@ results/
 
 ---
 
-### Step 1 — Train models
+### Step 0 — Clone ChipWhisperer repository
+
+The firmware `Makefile` depends on the ChipWhisperer SDK — specifically
+`../Makefile.inc`, the HAL (hardware abstraction layer for STM32), and the
+SimpleSerial 2 library. These are **not** included in this repo and must come
+from the official ChipWhisperer source:
+
+```bash
+git clone https://github.com/newaetech/chipwhisperer.git
+```
+
+After cloning, place the `firmware/` folder from this repo inside the
+ChipWhisperer hardware victims directory:
+
+```
+chipwhisperer/
+  firmware/
+    mcu/
+      nn-all/         ← put this repo's firmware/ contents here
+      nn.c
+      nn.h
+      nn-mnist.c
+      model_data.h
+      model_data_relu.c
+      ...
+      Makefile
+```
+
+The path matters because `Makefile` does `include ../Makefile.inc`.
+---
+
+### Step 2 — Train models
 
 Run from the `training/` directory:
 
@@ -73,15 +103,9 @@ weights_relu_ext.npz
 `act_relu_ext` uses a bitwise mask instead of a branch. Both share the same
 trained weights by design.
 
-Expected test accuracy after 20 epochs:
-- ReLU: ~97–98%
-- Sigmoid: ~97%
-- Tanh: ~97%
-- Extended ReLU: same as ReLU (identical weights)
-
 ---
 
-### Step 2 — Convert weights to C arrays
+### Step 3 — Convert weights to C arrays
 
 Still in `training/`:
 
@@ -98,27 +122,9 @@ model_data_tanh.c
 model_data_relu_ext.c
 ```
 
-**Important:** move these files to `firmware/` before building:
-
-```bash
-mv model_data_*.c ../firmware/
-```
-
-The script puts them in the current directory, not in `firmware/` automatically.
-
 ---
 
-### Step 3 — Build firmware
-
-The firmware is built inside the ChipWhisperer environment. The `Makefile` includes
-`../Makefile.inc` which is part of the ChipWhisperer SDK — so the `firmware/` folder
-must sit inside the ChipWhisperer hardware folder tree, for example:
-
-```
-chipwhisperer/hardware/victims/firmware/nn-all/
-```
-
-Build one activation at a time:
+### Step 4 — Build firmware
 
 ```bash
 # ReLU — with extended repeat loop for easier timing (used in the main experiment)
@@ -153,14 +159,14 @@ useful to verify clean inference only.
 
 ---
 
-### Step 4 — Set up notebooks
+### Step 5 — Set up notebooks
 
 In both notebooks, update the paths at the top of the configuration cell:
 
 **`allActivationsExperiment.ipynb`:**
 ```python
 FW_DIR = r'C:\path\to\chipwhisperer\firmware\nn-all'
-MNIST_CACHE = r'D:\mnist_cache'   # or any writable directory
+MNIST_CACHE = r'D:\mnist_cache'   # or any directory
 ```
 
 **`ReluExperiment.ipynb`:**
@@ -173,7 +179,7 @@ MNIST will be downloaded automatically on first run into `MNIST_CACHE`.
 
 ---
 
-### Step 5 — Run ReLU deep-dive (ReluExperiment.ipynb)
+### Step 6 — Run ReLU deep-dive (ReluExperiment.ipynb)
 
 Run cells top to bottom. The recommended order:
 
@@ -192,7 +198,7 @@ The deep-dive in section 16 is the core result: it shows `z1` unchanged while
 
 ---
 
-### Step 6 — Run cross-activation comparison (allActivationsExperiment.ipynb)
+### Step 7 — Run cross-activation comparison (allActivationsExperiment.ipynb)
 
 This notebook requires all four firmware `.hex` files and `FAIR_MODEL_MODE = True`
 (each activation uses its own trained weights).
@@ -201,11 +207,6 @@ Run cells top to bottom. The main entry point is `run_all_activations_main()` at
 bottom — it runs FULL and WINDOW mode sweeps for all four activations and produces
 comparison CSVs and plots in `results_all_activations/`.
 
-For a quick end-to-end check before the full run, uncomment the quick start cell:
-```python
-RELU_WINDOW_QUICK = run_window_mode_experiment(
-    'ReLU', windows=[(16, 32), (32, 48)], ...
-)
 ```
 
 ---
@@ -224,33 +225,10 @@ actual   a1[16] = -3.916523         (ReLU did not zero the negative value)
 `max_abs_z1_delta = 0.0` — the fault is isolated to the activation step,
 not the matrix multiply. Reproduced 50/50 times under identical parameters.
 
----
-
-## Known issues / notes
-
-- **`model_data.c`** in `firmware/` is a leftover file from an earlier version.
-  It is never compiled (Makefile uses `model_data_$(ACTIVATION).c`) but can be
-  ignored or deleted.
-
-- **CRLF line endings** in `model_data_*.c` and `model_data.h` — generated on
-  Windows. This does not affect compilation but may show up in git diffs.
-
-- **`allActivasionsResults/`** folder name has a typo (missing 't'). The notebooks
-  write to `results_all_activations/` (correct), so this only affects the
-  pre-saved result plots already in the repo.
-
-- **Single device, limited reps** — all experiments were run on one
-  ChipWhisperer-Lite with one STM32F3 target. `REPS_PER_POINT = 1` in the
-  main sweep means each `(width, offset, ext_offset)` configuration was tested
-  once per image. Results are reproducible on the same hardware but
-  generalizability to other boards is not guaranteed.
-
----
-
 ## Hardware setup
 
-- **Glitcher:** ChipWhisperer-Lite (CWLITEARM)
-- **Target:** STM32F302/303 on CW308 UFO board
+- **Platform:** ChipWhisperer-Lite (CWLITEARM)
+- **Target:** STM32F303
 - **Clock:** 7.37 MHz (CLKGEN), glitch output = `clock_xor`
 - **Communication:** SimpleSerial 2.1 over UART
 - **Trigger:** `ext_single`, fired from firmware GPIO at start of inference (FULL mode)
